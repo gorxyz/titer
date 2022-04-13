@@ -1,8 +1,7 @@
-#!/bin/lua
+#!/usr/bin/lua5.4
 local argparse = require('argparse')
 local http = require("socket.http")
 local ltn12 = require("ltn12")
-
 local titernik = [[
                 `         '
 ;,,,             `       '             ,,,;
@@ -29,7 +28,6 @@ local instagram_url = "https://www.instagram.com/accounts/login/"
 local instagram_url_login = "https://www.instagram.com/accounts/login/ajax/"
 
 local request_payload = [[queryParams={}&optIntoOneTap=false]]
-
 local request_headers = {
 	-- TODO add fake_agent() functin to generate random fake_agent
      ["User-Agent"] = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36",
@@ -39,22 +37,17 @@ local request_headers = {
 
 
 local function attack(victim, wordlist, tor, password)
-	while true do 
-		local request_response = {}
-		local body, code, headers, status, cookies = http.request {
-			url = instagram_url,
-			method = "GET",
-			headers = request_headers,
-			--source = ltn12.source.string(request_payload),
-			sink = ltn12.sink.table(request_response)
-		}
-		print("HTTP code:", code)
-		--print(table.concat(request_response) )
-		--print(table.concat(headers))
-	end
+	local request_response = {}
+	local body, code, headers = http.request {
+		url = instagram_url,
+		method = "GET",
+		headers = request_headers,
+		--source = ltn12.source.string(request_payload),
+		sink = ltn12.sink.table(request_response)
+	}
 end
 
-local function main() 
+local function main()
 	local parser = argparse() {
 		name = "titernik",
 		description = titernik,
@@ -74,7 +67,7 @@ local function main()
 	end)
 	local args = parser:parse()
 	attack('hello', 'Hello', 'disable', 'hack')
-	local open = io.open(args.wordlist, 'r')
+	--local open = io.open(args.wordlist, 'r')
 	local test = [[if open then
 		for brute in io.lines(args.wordlist) do
 			attack(args.target, args.wordlist, args.proxy, brute)	
