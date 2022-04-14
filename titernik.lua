@@ -1,4 +1,4 @@
-#!/usr/bin/lua5.4
+#!/usr/bin/lua
 local argparse = require('argparse')
 local http = require("socket.http")
 local ltn12 = require("ltn12")
