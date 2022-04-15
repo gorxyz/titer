@@ -1,4 +1,4 @@
-#!/usr/bin/lua
+#!/usr/bin/lua 
 local argparse = require('argparse')
 local http = require("socket.http")
 local ltn12 = require("ltn12")
@@ -34,7 +34,10 @@ local request_headers = {
      ["X-Requested-With"] = "XMLHttpRequest",
      ["Referer"] = instagram_url
 }
-
+local function wait(time)
+    timer = os.time()
+    repeat until os.time() > timer + time
+end
 
 local function attack(victim, wordlist, tor, password)
 	local request_response = {}
