@@ -17,3 +17,4 @@
 		   Y                   Y
                    !                   !
 	   http://github.com/sudurraaa/titernik
+					 v.0.0.1(alpha)
