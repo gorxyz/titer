@@ -16,5 +16,5 @@
 	          '8Y  `Y         Y'  Y8'
 		   Y                   Y
                    !                   !
-	   http://github.com/sudurraaa/titernik
+	   http://github.com/sudurraaa/titer
 					 v.0.0.1(alpha)

